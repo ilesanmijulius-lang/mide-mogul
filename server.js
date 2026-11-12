@@ -10,6 +10,8 @@ const DATA_DIR = path.join(__dirname, 'data');
 const STORE_PATH = path.join(DATA_DIR, 'store.json');
 
 const COURSE_CODES = ['BPA 213', 'BPA 216'];
+const ADMIN_USERNAME = sanitizeText(process.env.ADMIN_USERNAME || 'admin');
+const ADMIN_PASSWORD = sanitizeText(process.env.ADMIN_PASSWORD || 'admin123');
 const FARM = {
   latitude: parseCoordinate(process.env.FARM_LATITUDE, -90, 90),
   longitude: parseCoordinate(process.env.FARM_LONGITUDE, -180, 180),
@@ -18,34 +20,20 @@ const FARM = {
 const farmLocationConfigured = FARM.latitude !== null && FARM.longitude !== null;
 
 function parseCoordinate(value, min, max) {
-  if (value === undefined || value.trim() === '') return null;
+  if (value === undefined || String(value).trim() === '') return null;
   const number = Number(value);
   return Number.isFinite(number) && number >= min && number <= max ? number : null;
 }
 
 function parseRadius(value) {
-  if (value === undefined || value.trim() === '') return 250;
+  if (value === undefined || String(value).trim() === '') return 250;
   const number = Number(value);
   return Number.isFinite(number) && number > 0 ? number : 250;
 }
 
-const MASTER_ROSTER = [
-  { matric: '13044', name: 'Afe Oluwatamilore John', programme: 'COMPUTER SCIENCE' },
-  { matric: '13080', name: 'James Endurance Moses', programme: 'COMPUTER SCIENCE' },
-  { matric: '13094', name: 'Olanrewaju Temitope Feyintoluwa', programme: 'COMPUTER SCIENCE' },
-  { matric: '13123', name: 'Sunday Mathew Friday', programme: 'COMPUTER SCIENCE' },
-  { matric: '13747', name: 'Arowolo Festus Odunayo', programme: 'CHEMISTRY EDUCATION' },
-  { matric: '16323', name: 'Muraina Fathia Boluwatife', programme: 'MICROBIOLOGY' },
-  { matric: '16432', name: 'Ajayi Samuel Oluwatimilehin', programme: 'LIBRARY AND INFORMATION SCIENCE' },
-  { matric: '19830', name: 'Abdulazeez Ameerah Ololade', programme: 'ACCOUNTING' },
-  { matric: '19831', name: 'Abdullahi Lateef Olamilekan', programme: 'ACCOUNTING' },
-  { matric: '19832', name: 'Abdulsalami Toheeb Oziandu', programme: 'ACCOUNTING' },
-  { matric: '21001', name: 'Adebayo Michael Oluwaseun', programme: 'AGRICULTURAL SCIENCE' },
-  { matric: '21002', name: 'Olatunji Grace Funmilayo', programme: 'PUBLIC HEALTH' },
-  { matric: '21003', name: 'Eze Chidera Blessing', programme: 'CRIMINOLOGY AND SECURITY STUDIES' },
-  { matric: '21004', name: 'Balogun Temitope David', programme: 'MASS COMMUNICATION' },
-  { matric: '21005', name: 'Ojo Oluwadamilola Mary', programme: 'SCIENCE LABORATORY TECHNOLOGY' }
-];
+function sanitizeText(value) {
+  return String(value || '').trim();
+}
 
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -68,10 +56,6 @@ function normalizeMatric(value) {
   return String(value || '').trim().toUpperCase();
 }
 
-function sanitizeText(value) {
-  return String(value || '').trim();
-}
-
 function toRadians(value) {
   return value * (Math.PI / 180);
 }
@@ -86,22 +70,30 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function computeAbsenceList(registrations, attendance) {
-  const present = new Set(attendance.map((entry) => `${entry.matric}|${entry.course}|${entry.session}`));
-  return registrations.flatMap((reg) => {
-    const attendedSessions = new Set(attendance
-      .filter((entry) => entry.matric === reg.matric && entry.course === reg.course)
-      .map((entry) => entry.session));
-    return [...new Set(attendance.filter((entry) => entry.course === reg.course).map((entry) => entry.session))]
-      .filter((session) => !attendedSessions.has(session))
-      .map((session) => ({ course: reg.course, matric: reg.matric, name: reg.name, session, status: 'Absent (No valid sign-in)' }));
-  });
-}
-
 function buildAdminSummary() {
   const store = readStore();
   const registrations = store.registrations || [];
   const attendance = store.attendance || [];
+  const sessionNames = [...new Set(attendance.map((entry) => entry.session))];
+
+  const absences = registrations.flatMap((reg) => {
+    const attendedSessions = new Set(
+      attendance
+        .filter((entry) => entry.matric === reg.matric && entry.course === reg.course)
+        .map((entry) => entry.session)
+    );
+
+    return sessionNames
+      .filter((session) => !attendedSessions.has(session))
+      .map((session) => ({
+        course: reg.course,
+        matric: reg.matric,
+        name: reg.name,
+        session,
+        status: 'Absent (No valid sign-in)'
+      }));
+  });
+
   return {
     counts: {
       BPA213Registered: registrations.filter((r) => r.course === 'BPA 213').length,
@@ -111,8 +103,17 @@ function buildAdminSummary() {
     },
     registrations,
     attendance,
-    absences: computeAbsenceList(registrations, attendance)
+    absences
   };
+}
+
+function requireAdmin(req, res, next) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!token || token !== process.env.ADMIN_TOKEN) {
+    return res.status(401).json({ success: false, message: 'Admin access required.' });
+  }
+  return next();
 }
 
 app.use(express.json({ limit: '10mb' }));
@@ -123,22 +124,56 @@ app.get('/api/config', (_req, res) => {
     farmLocationConfigured,
     radiusMeters: FARM.radiusMeters,
     message: farmLocationConfigured
-      ? `Farm geofence is configured with a ${FARM.radiusMeters}m radius.`
-      : 'Farm location is not configured. Set FARM_LATITUDE and FARM_LONGITUDE on the server before accepting attendance.'
+      ? `Farm geofence configured with ${FARM.radiusMeters}m radius.`
+      : 'Farm geofence is not configured. Set FARM_LATITUDE and FARM_LONGITUDE.'
   });
 });
 
+app.post('/api/admin/login', (req, res) => {
+  const { username, password } = req.body || {};
+  if (!username || !password) {
+    return res.status(400).json({ success: false, message: 'Username and password are required.' });
+  }
+
+  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ success: false, message: 'Invalid admin credentials.' });
+  }
+
+  const token = Buffer.from(`${username}:${Date.now()}`).toString('base64');
+  process.env.ADMIN_TOKEN = token;
+  return res.json({ success: true, token });
+});
+
 app.get('/api/roster', (req, res) => {
-  const query = sanitizeText(req.query.q || '').toLowerCase();
+  const query = String(req.query.q || '').trim().toLowerCase();
+  const roster = [
+    { matric: '13044', name: 'Afe Oluwatamilore John', programme: 'COMPUTER SCIENCE' },
+    { matric: '13080', name: 'James Endurance Moses', programme: 'COMPUTER SCIENCE' },
+    { matric: '13094', name: 'Olanrewaju Temitope Feyintoluwa', programme: 'COMPUTER SCIENCE' },
+    { matric: '13123', name: 'Sunday Mathew Friday', programme: 'COMPUTER SCIENCE' },
+    { matric: '13747', name: 'Arowolo Festus Odunayo', programme: 'CHEMISTRY EDUCATION' },
+    { matric: '16323', name: 'Muraina Fathia Boluwatife', programme: 'MICROBIOLOGY' },
+    { matric: '16432', name: 'Ajayi Samuel Oluwatimilehin', programme: 'LIBRARY AND INFORMATION SCIENCE' },
+    { matric: '19830', name: 'Abdulazeez Ameerah Ololade', programme: 'ACCOUNTING' },
+    { matric: '19831', name: 'Abdullahi Lateef Olamilekan', programme: 'ACCOUNTING' },
+    { matric: '19832', name: 'Abdulsalami Toheeb Oziandu', programme: 'ACCOUNTING' },
+    { matric: '21001', name: 'Adebayo Michael Oluwaseun', programme: 'AGRICULTURAL SCIENCE' },
+    { matric: '21002', name: 'Olatunji Grace Funmilayo', programme: 'PUBLIC HEALTH' },
+    { matric: '21003', name: 'Eze Chidera Blessing', programme: 'CRIMINOLOGY AND SECURITY STUDIES' },
+    { matric: '21004', name: 'Balogun Temitope David', programme: 'MASS COMMUNICATION' },
+    { matric: '21005', name: 'Ojo Oluwadamilola Mary', programme: 'SCIENCE LABORATORY TECHNOLOGY' }
+  ];
+
   const results = query
-    ? MASTER_ROSTER.filter((student) => student.matric.toLowerCase().includes(query) || student.name.toLowerCase().includes(query))
-    : MASTER_ROSTER;
+    ? roster.filter((student) => student.matric.toLowerCase().includes(query) || student.name.toLowerCase().includes(query))
+    : roster;
+
   res.json(results.slice(0, 20));
 });
 
-app.get('/api/admin', (_req, res) => res.json(buildAdminSummary()));
+app.get('/api/admin', requireAdmin, (_req, res) => res.json(buildAdminSummary()));
 
-app.post('/api/reset', (_req, res) => {
+app.post('/api/reset', requireAdmin, (_req, res) => {
   writeStore({ registrations: [], attendance: [] });
   res.json({ success: true, message: 'All records cleared.' });
 });
@@ -173,10 +208,7 @@ app.post('/api/register', (req, res) => {
 
 app.post('/api/attendance', (req, res) => {
   if (!farmLocationConfigured) {
-    return res.status(503).json({
-      success: false,
-      message: 'Attendance is unavailable until the farm coordinates are configured on the server.'
-    });
+    return res.status(503).json({ success: false, message: 'Attendance is unavailable until the farm coordinates are configured.' });
   }
 
   const body = req.body || {};
@@ -189,8 +221,8 @@ app.post('/api/attendance', (req, res) => {
 
   if (!COURSE_CODES.includes(course)) return res.status(400).json({ success: false, message: 'Invalid course selected.' });
   if (!session) return res.status(400).json({ success: false, message: 'Please select a session.' });
-  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
-    return res.status(400).json({ success: false, message: 'Valid location coordinates are required to sign in.' });
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return res.status(400).json({ success: false, message: 'Location is required to sign in.' });
   }
 
   const store = readStore();
@@ -205,8 +237,9 @@ app.post('/api/attendance', (req, res) => {
     return res.status(403).json({ success: false, message: `You are ${Math.round(distanceMeters)}m away from the farm. Attendance is only allowed within ${FARM.radiusMeters}m.` });
   }
 
-  if (store.attendance.some((entry) => entry.matric === matric && entry.course === course && entry.session === session)) {
-    return res.status(409).json({ success: false, message: 'Attendance has already been recorded for this session.' });
+  const duplicate = store.attendance.some((entry) => entry.matric === matric && entry.course === course && entry.session === session);
+  if (duplicate) {
+    return res.status(409).json({ success: false, message: 'Attendance already recorded for this session.' });
   }
 
   const attendanceEntry = {
@@ -220,6 +253,7 @@ app.post('/api/attendance', (req, res) => {
     geofenceStatus: 'Within configured farm radius',
     distanceMeters: Math.round(distanceMeters)
   };
+
   store.attendance.push(attendanceEntry);
   writeStore(store);
   res.json({ success: true, attendance: attendanceEntry });
@@ -227,5 +261,5 @@ app.post('/api/attendance', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`BOUESTI attendance server running on port ${PORT}`);
-  if (!farmLocationConfigured) console.warn('Farm location is unset; attendance sign-in is disabled. See .env.example.');
+  if (!farmLocationConfigured) console.warn('Farm geofence is not configured. Set FARM_LATITUDE and FARM_LONGITUDE in your .env file.');
 });
