@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOUESTI Practical Attendance & Registration Portal (200 Level)</title>
-    <!-- Tailwind CSS CDN -->
+    <title>BOUESTI Practical Attendance & Registration Portal (BPA 213 / BPA 216)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -15,14 +13,13 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
 
-    <!-- Header -->
     <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-2">
             <div class="flex items-center gap-3">
                 <div class="bg-white p-2 rounded-lg text-emerald-900 font-bold text-xl">BOUESTI</div>
                 <div>
-                    <h1 class="font-bold text-base sm:text-lg leading-tight">200 Level Practical Attendance System</h1>
-                    <p class="text-xs text-emerald-200">University-Wide General Course Portal</p>
+                    <h1 class="font-bold text-base sm:text-lg leading-tight">BPA 213 / BPA 216 Practical Attendance</h1>
+                    <p class="text-xs text-emerald-200">Agriculture Practical Skills Attendance System</p>
                 </div>
             </div>
             <nav class="flex gap-2 bg-emerald-950 p-1 rounded-lg">
@@ -33,24 +30,20 @@
         </div>
     </header>
 
-    <!-- Browser Warning Banner -->
     <div id="browser-warning" class="bg-amber-50 border-b border-amber-200 px-4 py-2 text-xs text-amber-800 text-center hidden">
         <span>⚠️ If camera or submission is restricted, tap your browser menu (⋮) and select <strong>"Open in Chrome"</strong> or <strong>"Open in Safari"</strong>.</span>
     </div>
 
-    <!-- Main Container -->
-    <main class="max-w-4xl mx-auto px-4 py-6 flex-grow w-full">
+    <main class="max-w-5xl mx-auto px-4 py-6 flex-grow w-full">
 
-        <!-- ================= TAB 1: STUDENT REGISTRATION ================= -->
         <section id="section-register" class="space-y-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="border-b pb-4 mb-4">
                     <h2 class="text-xl font-bold text-slate-900">Student Course Registration</h2>
-                    <p class="text-xs text-slate-500">Search your Matric Number or Full Name to complete your semester practical registration.</p>
+                    <p class="text-xs text-slate-500">Register for BPA 213 or BPA 216 and bind your current device to the student account.</p>
                 </div>
 
                 <form id="registrationForm" onsubmit="handleRegistration(event)" class="space-y-4">
-                    <!-- Search Student Roster -->
                     <div>
                         <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Search Roster (Matric No or Name)</label>
                         <div class="relative">
@@ -59,7 +52,6 @@
                         </div>
                     </div>
 
-                    <!-- Auto-filled Details -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Matric Number</label>
@@ -82,7 +74,15 @@
                         </div>
                     </div>
 
-                    <!-- Photo / Selfie Capture -->
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Course Unit</label>
+                        <select id="regCourse" class="w-full px-3 py-2.5 border rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-600 outline-none" required>
+                            <option value="">-- Select Course --</option>
+                            <option value="BPA 213">BPA 213 - Basic Practical Skills in Agriculture I</option>
+                            <option value="BPA 216">BPA 216 - Basic Practical Skills in Agriculture II</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Verification Selfie / Photo</label>
                         <div class="flex items-center gap-4">
@@ -100,15 +100,23 @@
             </div>
         </section>
 
-        <!-- ================= TAB 2: ATTENDANCE SIGN-IN ================= -->
         <section id="section-signin" class="space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="border-b pb-4 mb-4">
                     <h2 class="text-xl font-bold text-slate-900">Practical Session Sign-In</h2>
-                    <p class="text-xs text-slate-500">Clock in for today's practical session using your registered Matric Number.</p>
+                    <p class="text-xs text-slate-500">Students may only sign in from the registered device and within the BOUESTI geofence.</p>
                 </div>
 
                 <form id="signinForm" onsubmit="handleAttendance(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Course Unit</label>
+                        <select id="signInCourse" class="w-full px-3 py-2.5 border rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-600 outline-none" required>
+                            <option value="">-- Select Course --</option>
+                            <option value="BPA 213">BPA 213 - Basic Practical Skills in Agriculture I</option>
+                            <option value="BPA 216">BPA 216 - Basic Practical Skills in Agriculture II</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Enter Matric Number</label>
                         <input type="text" id="signInMatric" placeholder="e.g. 13044" class="w-full px-4 py-2.5 border rounded-xl text-sm uppercase focus:ring-2 focus:ring-emerald-600 outline-none" required>
@@ -118,7 +126,7 @@
                         <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Select Practical Session / Week</label>
                         <select id="signInSession" class="w-full px-3 py-2.5 border rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-600 outline-none" required>
                             <option value="">-- Select Practical Week --</option>
-                            <option value="Week 1: Basic Farm Orientation & Safety">Week 1: Basic Farm Orientation & Safety</option>
+                            <option value="Week 1: Farm Orientation & Safety">Week 1: Farm Orientation & Safety</option>
                             <option value="Week 2: Soil Sampling & Land Preparation">Week 2: Soil Sampling & Land Preparation</option>
                             <option value="Week 3: Crop Propagation & Nursery Practices">Week 3: Crop Propagation & Nursery Practices</option>
                             <option value="Week 4: Livestock Management & Feeding">Week 4: Livestock Management & Feeding</option>
@@ -134,13 +142,12 @@
             </div>
         </section>
 
-        <!-- ================= TAB 3: ADMIN PORTAL ================= -->
         <section id="section-admin" class="space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4 gap-3">
                     <div>
                         <h2 class="text-xl font-bold text-slate-900">Admin Control & Reports</h2>
-                        <p class="text-xs text-slate-500">Monitor student registrations, attendance logs, and export reports.</p>
+                        <p class="text-xs text-slate-500">Monitor course-based registrations, attendance, and absences.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <button onclick="exportRegisteredCSV()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 shadow">
@@ -155,131 +162,159 @@
                     </div>
                 </div>
 
-                <!-- Stats Overview -->
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
-                        <p class="text-xs font-medium text-emerald-700">Total Students Registered</p>
-                        <p id="statRegisteredCount" class="text-2xl font-bold text-emerald-900 mt-1">0</p>
+                        <p class="text-xs font-medium text-emerald-700">BPA 213 Registered</p>
+                        <p id="statBPA213" class="text-2xl font-bold text-emerald-900 mt-1">0</p>
                     </div>
                     <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
-                        <p class="text-xs font-medium text-blue-700">Total Attendance Logs</p>
-                        <p id="statAttendanceCount" class="text-2xl font-bold text-blue-900 mt-1">0</p>
+                        <p class="text-xs font-medium text-blue-700">BPA 216 Registered</p>
+                        <p id="statBPA216" class="text-2xl font-bold text-blue-900 mt-1">0</p>
                     </div>
                 </div>
 
-                <!-- Tabs inside Admin -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl">
+                        <p class="text-xs font-medium text-amber-700">BPA 213 Attendance Logs</p>
+                        <p id="statAtt213" class="text-2xl font-bold text-amber-900 mt-1">0</p>
+                    </div>
+                    <div class="bg-violet-50 border border-violet-200 p-4 rounded-xl">
+                        <p class="text-xs font-medium text-violet-700">BPA 216 Attendance Logs</p>
+                        <p id="statAtt216" class="text-2xl font-bold text-violet-900 mt-1">0</p>
+                    </div>
+                </div>
+
                 <div class="flex gap-2 border-b mb-4">
                     <button onclick="switchAdminSubTab('reg')" id="admin-sub-reg" class="pb-2 px-3 text-xs font-semibold border-b-2 border-emerald-700 text-emerald-800">Registered Students</button>
                     <button onclick="switchAdminSubTab('att')" id="admin-sub-att" class="pb-2 px-3 text-xs font-semibold text-slate-500 hover:text-slate-800">Attendance Logs</button>
+                    <button onclick="switchAdminSubTab('abs')" id="admin-sub-abs" class="pb-2 px-3 text-xs font-semibold text-slate-500 hover:text-slate-800">Absence List</button>
                 </div>
 
-                <!-- Registered Students Table -->
                 <div id="admin-table-reg" class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-100 uppercase text-slate-600">
                             <tr>
                                 <th class="p-2.5">Matric No</th>
                                 <th class="p-2.5">Full Name</th>
+                                <th class="p-2.5">Course</th>
                                 <th class="p-2.5">Programme</th>
                                 <th class="p-2.5">Phone</th>
                                 <th class="p-2.5">Date</th>
                             </tr>
                         </thead>
                         <tbody id="registeredTableBody" class="divide-y divide-slate-200">
-                            <tr><td colspan="5" class="p-4 text-center text-slate-400">No student registrations recorded yet.</td></tr>
+                            <tr><td colspan="6" class="p-4 text-center text-slate-400">No student registrations recorded yet.</td></tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Attendance Logs Table -->
                 <div id="admin-table-att" class="overflow-x-auto hidden">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-100 uppercase text-slate-600">
                             <tr>
                                 <th class="p-2.5">Matric No</th>
                                 <th class="p-2.5">Full Name</th>
+                                <th class="p-2.5">Course</th>
                                 <th class="p-2.5">Programme</th>
                                 <th class="p-2.5">Session</th>
                                 <th class="p-2.5">Timestamp</th>
                             </tr>
                         </thead>
                         <tbody id="attendanceTableBody" class="divide-y divide-slate-200">
-                            <tr><td colspan="5" class="p-4 text-center text-slate-400">No attendance clock-ins recorded yet.</td></tr>
+                            <tr><td colspan="6" class="p-4 text-center text-slate-400">No attendance clock-ins recorded yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="admin-table-abs" class="overflow-x-auto hidden">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-100 uppercase text-slate-600">
+                            <tr>
+                                <th class="p-2.5">Course</th>
+                                <th class="p-2.5">Matric No</th>
+                                <th class="p-2.5">Student</th>
+                                <th class="p-2.5">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="absenceTableBody" class="divide-y divide-slate-200">
+                            <tr><td colspan="4" class="p-4 text-center text-slate-400">No absences flagged yet.</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </section>
-
     </main>
 
-    <!-- Footer -->
     <footer class="bg-white border-t py-4 text-center text-xs text-slate-500">
         BOUESTI Teaching & Research Farm • Practical Attendance & Tracking System
     </footer>
 
-    <!-- Master Roster Data Embedded Directly for Instant Offline/Online Reliability -->
     <script>
-        // Full Master Roster (Embedded sample & structure from university records)
+        const APP_CONFIG = {
+            farmLatitude: 7.3025,
+            farmLongitude: 5.1520,
+            allowedRadiusMeters: 250,
+            courseOptions: ['BPA 213', 'BPA 216'],
+            geofenceNote: 'Replace the fallback farm coordinates before production deployment.'
+        };
+
         const masterRoster = [
-            { matric: "13044", name: "Afe Oluwatamilore John", programme: "COMPUTER SCIENCE" },
-            { matric: "13080", name: "James Endurance Moses", programme: "COMPUTER SCIENCE" },
-            { matric: "13094", name: "Olanrewaju Temitope Feyintoluwa", programme: "COMPUTER SCIENCE" },
-            { matric: "13123", name: "Sunday Mathew Friday", programme: "COMPUTER SCIENCE" },
-            { matric: "13747", name: "Arowolo Festus Odunayo", programme: "CHEMISTRY EDUCATION" },
-            { matric: "16323", name: "Muraina Fathia Boluwatife", programme: "MICROBIOLOGY" },
-            { matric: "16432", name: "Ajayi Samuel Oluwatimilehin", programme: "LIBRARY AND INFORMATION SCIENCE" },
-            { matric: "19830", name: "Abdulazeez Ameerah Ololade", programme: "ACCOUNTING" },
-            { matric: "19831", name: "Abdullahi Lateef Olamilekan", programme: "ACCOUNTING" },
-            { matric: "19832", name: "Abdulsalami Toheeb Oziandu", programme: "ACCOUNTING" },
-            { matric: "21001", name: "Adebayo Michael Oluwaseun", programme: "AGRICULTURAL SCIENCE" },
-            { matric: "21002", name: "Olatunji Grace Funmilayo", programme: "PUBLIC HEALTH" },
-            { matric: "21003", name: "Eze Chidera Blessing", programme: "CRIMINOLOGY AND SECURITY STUDIES" },
-            { matric: "21004", name: "Balogun Temitope David", programme: "MASS COMMUNICATION" },
-            { matric: "21005", name: "Ojo Oluwadamilola Mary", programme: "SCIENCE LABORATORY TECHNOLOGY" }
-            // Note: The full 6,902 students dataset is loaded in the live running environment.
+            { matric: '13044', name: 'Afe Oluwatamilore John', programme: 'COMPUTER SCIENCE' },
+            { matric: '13080', name: 'James Endurance Moses', programme: 'COMPUTER SCIENCE' },
+            { matric: '13094', name: 'Olanrewaju Temitope Feyintoluwa', programme: 'COMPUTER SCIENCE' },
+            { matric: '13123', name: 'Sunday Mathew Friday', programme: 'COMPUTER SCIENCE' },
+            { matric: '13747', name: 'Arowolo Festus Odunayo', programme: 'CHEMISTRY EDUCATION' },
+            { matric: '16323', name: 'Muraina Fathia Boluwatife', programme: 'MICROBIOLOGY' },
+            { matric: '16432', name: 'Ajayi Samuel Oluwatimilehin', programme: 'LIBRARY AND INFORMATION SCIENCE' },
+            { matric: '19830', name: 'Abdulazeez Ameerah Ololade', programme: 'ACCOUNTING' },
+            { matric: '19831', name: 'Abdullahi Lateef Olamilekan', programme: 'ACCOUNTING' },
+            { matric: '19832', name: 'Abdulsalami Toheeb Oziandu', programme: 'ACCOUNTING' },
+            { matric: '21001', name: 'Adebayo Michael Oluwaseun', programme: 'AGRICULTURAL SCIENCE' },
+            { matric: '21002', name: 'Olatunji Grace Funmilayo', programme: 'PUBLIC HEALTH' },
+            { matric: '21003', name: 'Eze Chidera Blessing', programme: 'CRIMINOLOGY AND SECURITY STUDIES' },
+            { matric: '21004', name: 'Balogun Temitope David', programme: 'MASS COMMUNICATION' },
+            { matric: '21005', name: 'Ojo Oluwadamilola Mary', programme: 'SCIENCE LABORATORY TECHNOLOGY' }
         ];
 
-        // Local Storage Sync Helpers
         function getStorageData(key) {
             try { return JSON.parse(localStorage.getItem(key)) || []; } catch(e) { return []; }
         }
+
         function setStorageData(key, data) {
             try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
         }
 
-        // Tab Switching
         function switchTab(tabId) {
             ['register', 'signin', 'admin'].forEach(t => {
                 document.getElementById(`section-${t}`).classList.add('hidden');
-                document.getElementById(`tab-${t}`).className = "px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition text-emerald-200 hover:text-white";
+                document.getElementById(`tab-${t}`).className = 'px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition text-emerald-200 hover:text-white';
             });
             document.getElementById(`section-${tabId}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabId}`).className = "px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition bg-white text-emerald-900 shadow";
+            document.getElementById(`tab-${tabId}`).className = 'px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition bg-white text-emerald-900 shadow';
             if(tabId === 'admin') loadAdminDashboard();
         }
 
         function switchAdminSubTab(sub) {
-            if(sub === 'reg') {
-                document.getElementById('admin-table-reg').classList.remove('hidden');
-                document.getElementById('admin-table-att').classList.add('hidden');
-                document.getElementById('admin-sub-reg').className = "pb-2 px-3 text-xs font-semibold border-b-2 border-emerald-700 text-emerald-800";
-                document.getElementById('admin-sub-att').className = "pb-2 px-3 text-xs font-semibold text-slate-500 hover:text-slate-800";
-            } else {
-                document.getElementById('admin-table-reg').classList.add('hidden');
-                document.getElementById('admin-table-att').classList.remove('hidden');
-                document.getElementById('admin-sub-reg').className = "pb-2 px-3 text-xs font-semibold text-slate-500 hover:text-slate-800";
-                document.getElementById('admin-sub-att').className = "pb-2 px-3 text-xs font-semibold border-b-2 border-emerald-700 text-emerald-800";
-            }
+            const views = ['reg', 'att', 'abs'];
+            views.forEach(v => {
+                const table = document.getElementById(`admin-table-${v}`);
+                if(table) table.classList.add('hidden');
+            });
+            const tabs = ['reg', 'att', 'abs'];
+            tabs.forEach(v => {
+                const btn = document.getElementById(`admin-sub-${v}`);
+                if(btn) btn.className = 'pb-2 px-3 text-xs font-semibold text-slate-500 hover:text-slate-800';
+            });
+
+            document.getElementById(`admin-table-${sub}`).classList.remove('hidden');
+            document.getElementById(`admin-sub-${sub}`).className = 'pb-2 px-3 text-xs font-semibold border-b-2 border-emerald-700 text-emerald-800';
         }
 
-        // Roster Search
         function filterRoster(query) {
             const dropdown = document.getElementById('rosterDropdown');
             if(!query || query.length < 2) { dropdown.classList.add('hidden'); return; }
             const q = query.toLowerCase();
             const matches = masterRoster.filter(s => s.matric.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)).slice(0, 10);
-            
             if(matches.length === 0) { dropdown.classList.add('hidden'); return; }
 
             dropdown.innerHTML = matches.map(m => `
@@ -299,7 +334,7 @@
             document.getElementById('rosterDropdown').classList.add('hidden');
         }
 
-        let compressedPhotoBase64 = "";
+        let compressedPhotoBase64 = '';
         function previewImage(input) {
             if(input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -320,51 +355,135 @@
             }
         }
 
-        // Handle Registration
+        function generateDeviceId() {
+            const raw = `${navigator.userAgent}|${navigator.language}|${screen.width}x${screen.height}|${new Date().getTimezoneOffset()}`;
+            let hash = 0;
+            for (let i = 0; i < raw.length; i++) {
+                hash = ((hash << 5) - hash + raw.charCodeAt(i)) | 0;
+            }
+            return `device_${Math.abs(hash)}`;
+        }
+
+        function getCurrentDeviceId() {
+            let deviceId = localStorage.getItem('bouesti_device_id');
+            if(!deviceId) {
+                deviceId = generateDeviceId();
+                localStorage.setItem('bouesti_device_id', deviceId);
+            }
+            return deviceId;
+        }
+
+        function toRadians(value) {
+            return value * (Math.PI / 180);
+        }
+
+        function haversineDistanceKm(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = toRadians(lat2 - lat1);
+            const dLon = toRadians(lon2 - lon1);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c * 1000;
+        }
+
+        function checkLocationWithinFarm() {
+            return new Promise((resolve) => {
+                if(!navigator.geolocation) {
+                    resolve({ allowed: false, reason: 'Geolocation is not supported by this browser.' });
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const distance = haversineDistanceKm(
+                            APP_CONFIG.farmLatitude,
+                            APP_CONFIG.farmLongitude,
+                            position.coords.latitude,
+                            position.coords.longitude
+                        );
+
+                        if(distance <= APP_CONFIG.allowedRadiusMeters) {
+                            resolve({ allowed: true, distance });
+                        } else {
+                            resolve({ allowed: false, reason: `You are ${Math.round(distance)}m away from the BOUESTI farm. Attendance is only allowed within ${APP_CONFIG.allowedRadiusMeters}m.`, distance });
+                        }
+                    },
+                    () => {
+                        resolve({ allowed: false, reason: 'Location access was denied. Please allow location access to sign in.' });
+                    },
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                );
+            });
+        }
+
         function handleRegistration(e) {
             e.preventDefault();
             const matric = document.getElementById('regMatric').value;
             const name = document.getElementById('regName').value;
             const programme = document.getElementById('regProgramme').value;
             const phone = document.getElementById('regPhone').value;
+            const course = document.getElementById('regCourse').value;
 
-            if(!matric) { alert("Please select a student from the roster."); return; }
+            if(!matric) { alert('Please select a student from the roster.'); return; }
+            if(!course) { alert('Please select a course unit.'); return; }
 
             const registrations = getStorageData('bouesti_registrations');
-            if(registrations.some(r => r.matric === matric)) {
-                alert("This Matric Number has already been registered!");
+            if(registrations.some(r => r.matric === matric && r.course === course)) {
+                alert('This student is already registered for the selected course.');
                 return;
             }
 
             const newReg = {
-                matric, name, programme, phone,
+                matric,
+                name,
+                programme,
+                phone,
+                course,
                 photo: compressedPhotoBase64,
+                deviceId: getCurrentDeviceId(),
                 date: new Date().toLocaleString()
             };
 
             registrations.push(newReg);
             setStorageData('bouesti_registrations', registrations);
 
-            alert("Registration successful! Your details have been saved.");
+            alert('Registration successful! Your device has been linked to this course registration.');
             document.getElementById('registrationForm').reset();
             document.getElementById('photoPreviewContainer').classList.add('hidden');
-            compressedPhotoBase64 = "";
+            compressedPhotoBase64 = '';
         }
 
-        // Handle Attendance Sign-In
-        function handleAttendance(e) {
+        async function handleAttendance(e) {
             e.preventDefault();
+            const course = document.getElementById('signInCourse').value;
             const matric = document.getElementById('signInMatric').value.trim().toUpperCase();
             const session = document.getElementById('signInSession').value;
 
+            if(!course) { alert('Please select a course unit.'); return; }
+            if(!session) { alert('Please select a practical session.'); return; }
+
             const registrations = getStorageData('bouesti_registrations');
-            const student = registrations.find(r => r.matric === matric) || masterRoster.find(r => r.matric === matric);
+            const student = registrations.find(r => r.matric === matric && r.course === course);
 
             if(!student) {
-                alert("Matric Number not found! Please complete your Student Registration first.");
+                alert('Matric number not found for this course. Please complete your registration first.');
                 switchTab('register');
                 document.getElementById('regSearchInput').value = matric;
                 filterRoster(matric);
+                return;
+            }
+
+            const currentDeviceId = getCurrentDeviceId();
+            if(student.deviceId !== currentDeviceId) {
+                alert('This student is registered to a different device. Please use the registered phone/device only.');
+                return;
+            }
+
+            const locationCheck = await checkLocationWithinFarm();
+            if(!locationCheck.allowed) {
+                alert(locationCheck.reason || 'Attendance failed. You are outside the BOUESTI farm geofence.');
                 return;
             }
 
@@ -375,32 +494,43 @@
                 matric: student.matric,
                 name: student.name,
                 programme: student.programme || 'AGRICULTURAL SCIENCE',
+                course: student.course,
                 session,
-                timestamp
+                deviceId: currentDeviceId,
+                timestamp,
+                geofenceStatus: 'Within BOUESTI farm radius'
             });
 
             setStorageData('bouesti_attendance', attendance);
-            alert(`Attendance signed in successfully for ${student.name} (${student.matric})!`);
+            alert(`Attendance signed in successfully for ${student.name} (${student.matric}) in ${student.course}.`);
             document.getElementById('signInMatric').value = '';
+            document.getElementById('signInCourse').value = '';
             document.getElementById('signInSession').value = '';
         }
 
-        // Admin Dashboard Loader
         function loadAdminDashboard() {
             const registrations = getStorageData('bouesti_registrations');
             const attendance = getStorageData('bouesti_attendance');
 
-            document.getElementById('statRegisteredCount').innerText = registrations.length;
-            document.getElementById('statAttendanceCount').innerText = attendance.length;
+            const bpa213Count = registrations.filter(r => r.course === 'BPA 213').length;
+            const bpa216Count = registrations.filter(r => r.course === 'BPA 216').length;
+            const att213 = attendance.filter(a => a.course === 'BPA 213').length;
+            const att216 = attendance.filter(a => a.course === 'BPA 216').length;
+
+            document.getElementById('statBPA213').innerText = bpa213Count;
+            document.getElementById('statBPA216').innerText = bpa216Count;
+            document.getElementById('statAtt213').innerText = att213;
+            document.getElementById('statAtt216').innerText = att216;
 
             const regBody = document.getElementById('registeredTableBody');
             if(registrations.length === 0) {
-                regBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">No student registrations recorded yet.</td></tr>`;
+                regBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">No student registrations recorded yet.</td></tr>';
             } else {
                 regBody.innerHTML = registrations.map(r => `
                     <tr class="hover:bg-slate-50">
                         <td class="p-2.5 font-semibold text-emerald-900">${r.matric}</td>
                         <td class="p-2.5">${r.name}</td>
+                        <td class="p-2.5">${r.course}</td>
                         <td class="p-2.5">${r.programme}</td>
                         <td class="p-2.5">${r.phone}</td>
                         <td class="p-2.5 text-slate-500">${r.date}</td>
@@ -410,62 +540,94 @@
 
             const attBody = document.getElementById('attendanceTableBody');
             if(attendance.length === 0) {
-                attBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">No attendance clock-ins recorded yet.</td></tr>`;
+                attBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">No attendance clock-ins recorded yet.</td></tr>';
             } else {
                 attBody.innerHTML = attendance.map(a => `
                     <tr class="hover:bg-slate-50">
                         <td class="p-2.5 font-semibold text-emerald-900">${a.matric}</td>
                         <td class="p-2.5">${a.name}</td>
+                        <td class="p-2.5">${a.course}</td>
                         <td class="p-2.5">${a.programme}</td>
                         <td class="p-2.5 font-medium text-blue-800">${a.session}</td>
                         <td class="p-2.5 text-slate-500">${a.timestamp}</td>
                     </tr>
                 `).join('');
             }
+
+            const absenceTable = document.getElementById('absenceTableBody');
+            const absences = buildAbsenceList(registrations, attendance);
+            if(absences.length === 0) {
+                absenceTable.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">No absences flagged yet.</td></tr>';
+            } else {
+                absenceTable.innerHTML = absences.map(a => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-2.5 font-semibold text-slate-800">${a.course}</td>
+                        <td class="p-2.5 font-semibold text-emerald-900">${a.matric}</td>
+                        <td class="p-2.5">${a.name}</td>
+                        <td class="p-2.5 text-red-700 font-medium">${a.status}</td>
+                    </tr>
+                `).join('');
+            }
         }
 
-        // CSV Exports using Blob URLs
+        function buildAbsenceList(registrations, attendance) {
+            const presentKeys = new Set(attendance.map(a => `${a.matric}|${a.course}`));
+            const absences = [];
+
+            registrations.forEach(r => {
+                const key = `${r.matric}|${r.course}`;
+                if(!presentKeys.has(key)) {
+                    absences.push({
+                        course: r.course,
+                        matric: r.matric,
+                        name: r.name,
+                        status: 'Absent (No valid sign-in)'
+                    });
+                }
+            });
+            return absences;
+        }
+
         function exportRegisteredCSV() {
             const registrations = getStorageData('bouesti_registrations');
-            if(registrations.length === 0) { alert("No registration records to export."); return; }
-            let csv = "Matric Number,Full Name,Programme,Phone,Date\n";
+            if(registrations.length === 0) { alert('No registration records to export.'); return; }
+            let csv = 'Matric Number,Full Name,Course,Programme,Phone,Date\n';
             registrations.forEach(r => {
-                csv += `"${r.matric}","${r.name}","${r.programme}","${r.phone}","${r.date}"\n`;
+                csv += `"${r.matric}","${r.name}","${r.course}","${r.programme}","${r.phone}","${r.date}"\n`;
             });
-            downloadCSV(csv, "BOUESTI_Registered_Students.csv");
+            downloadCSV(csv, 'BOUESTI_Registered_Students.csv');
         }
 
         function exportAttendanceCSV() {
             const attendance = getStorageData('bouesti_attendance');
-            if(attendance.length === 0) { alert("No attendance records to export."); return; }
-            let csv = "Matric Number,Full Name,Programme,Session,Timestamp\n";
+            if(attendance.length === 0) { alert('No attendance records to export.'); return; }
+            let csv = 'Matric Number,Full Name,Course,Programme,Session,Timestamp\n';
             attendance.forEach(a => {
-                csv += `"${a.matric}","${a.name}","${a.programme}","${a.session}","${a.timestamp}"\n`;
+                csv += `"${a.matric}","${a.name}","${a.course}","${a.programme}","${a.session}","${a.timestamp}"\n`;
             });
-            downloadCSV(csv, "BOUESTI_Attendance_Logs.csv");
+            downloadCSV(csv, 'BOUESTI_Attendance_Logs.csv');
         }
 
         function downloadCSV(csvContent, filename) {
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", filename);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
         function clearAllData() {
-            if(confirm("Are you sure you want to reset all stored records?")) {
+            if(confirm('Are you sure you want to reset all stored records?')) {
                 localStorage.removeItem('bouesti_registrations');
                 localStorage.removeItem('bouesti_attendance');
                 loadAdminDashboard();
-                alert("All records cleared.");
+                alert('All records cleared.');
             }
         }
 
-        // Show browser warning if opened in in-app browsers
         if(/FBAN|FBAV|Instagram|WhatsApp|Telegram/.test(navigator.userAgent)) {
             document.getElementById('browser-warning').classList.remove('hidden');
         }
