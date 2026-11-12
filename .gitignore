@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOUESTI Practical Attendance (BPA 213 / BPA 216)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+  <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div class="flex items-center gap-3">
+        <div class="bg-white p-2 rounded-lg text-emerald-900 font-bold text-xl">BOUESTI</div>
+        <div>
+          <h1 class="font-bold text-base sm:text-lg leading-tight">BPA 213 / BPA 216 Attendance System</h1>
+          <p class="text-xs text-emerald-200">Unified Practical Attendance & Geofence Portal</p>
+        </div>
+      </div>
+      <nav class="flex gap-2 bg-emerald-950 p-1 rounded-lg">
+        <button onclick="switchTab('register')" id="tab-register" class="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition bg-white text-emerald-900 shadow">Student Registration</button>
+        <button onclick="switchTab('signin')" id="tab-signin" class="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition text-emerald-200 hover:text-white">Attendance Sign-In</button>
+        <button onclick="switchTab('admin')" id="tab-admin" class="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition text-emerald-200 hover:text-white">Admin Portal</button>
+      </nav>
+    </div>
+  </header>
+
+  <div id="browser-warning" class="bg-amber-50 border-b border-amber-200 px-4 py-2 text-xs text-amber-800 text-center hidden">
+    <span>⚠️ If camera or submission is restricted, open in Chrome or Safari to enable camera and location permissions.</span>
+  </div>
+
+  <main class="max-w-5xl mx-auto px-4 py-6 flex-grow w-full">
+    <section id="section-register" class="space-y-6">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div class="border-b pb-4 mb-4">
+          <h2 class="text-xl font-bold text-slate-900">Student Course Registration</h2>
+          <p class="text-xs text-slate-500">Register for BPA 213 or BPA 216 and bind the current device to the student account.</p>
+        </div>
+
+        <form id="registrationForm" onsubmit="handleRegistration(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Search Roster (Matric No or Name)</label>
+            <div class="relative">
+              <input type="text" id="regSearchInput" placeholder="e.g. 13044 or Afe Oluwatamilore" class="w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-emerald-600 outline-none" oninput="filterRoster(this.value)" autocomplete="off" />
+              <div id="rosterDropdown" class="absolute left-0 right-0 mt-1 bg-white border rounded-xl shadow-lg max-h-48 overflow-y-auto z-20 hidden"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Matric Number</label>
+              <input type="text" id="regMatric" readonly class="w-full px-3 py-2 bg-slate-100 border rounded-lg text-sm text-slate-700" required>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Full Name</label>
+              <input type="text" id="regName" readonly class="w-full px-3 py-2 bg-slate-100 border rounded-lg text-sm text-slate-700" required>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Programme / Department</label>
+              <input type="text" id="regProgramme" readonly class="w-full px-3 py-2 bg-slate-100 border rounded-lg text-sm text-slate-700" required>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Phone Number</label>
+              <input type="tel" id="regPhone" placeholder="08012345678" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-emerald-600 outline-none" required>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Course Unit</label>
+            <select id="regCourse" class="w-full px-3 py-2.5 border rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-600 outline-none" required>
+              <option value="">-- Select Course --</option>
+              <option value="BPA 213">BPA 213 - Basic Practical Skills in Agriculture I</option>
+              <option value="BPA 216">BPA 216 - Basic Practical Skills in Agriculture II</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Verification Selfie / Photo</label>
+            <div class="flex items-center gap-4">
+              <input type="file" id="regPhotoFile" accept="image/*" capture="user" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" onchange="previewImage(this)" />
+            </div>
+            <div id="photoPreviewContainer" class="mt-2 hidden">
+              <img id="photoPreview" class="h-20 w-20 object-cover rounded-lg border shadow-sm" alt="selfie preview" />
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl text-sm transition shadow-md flex items-center justify-center gap-2">
+            <i data-lucide="user-check" class="w-4 h-4"></i> Complete Registration
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section id="section-signin" class="space-y-6 hidden">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div class="border-b pb-4 mb-4">
+          <h2 class="text-xl font-bold text-slate-900">Practical Session Sign-In</h2>
+          <p class="text-xs text-slate-500">Students may only sign in from the registered device and within the BOUESTI geofence.</p>
+        </div>
+
+        <form id="signinForm" onsubmit="handleAttendance(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Course Unit</label>
+            <select id="signInCourse" class="w-full px-3 py-2.5 border rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-600 outline-none" required>
+              <option value="">-- Select Course --</option>
+              <option value="BPA 213">BPA 213 - Basic Practical Skills in Agriculture I</option>
+              <option value="BPA 216">BPA 216 - Basic Practical Skills in Agriculture II</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Enter Matric Number</label>
+            <input type="text" id="signInMatric" placeholder="e.g. 13044" class="w-full px-4 py-2.5 border rounded-xl text-sm uppercase focus:ring-2 focus:ring-emerald-600 outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Select Practical Session / Week</label>
+            <select id="signInSession" class="w-full px-3 py-2.5 border rounded-xl text-sm bg-white focus:ring-2 focus:ring-emerald-600 outline-none" required>
+              <option value="">-- Select Practical Week --</option>
+              <option value="Week 1: Farm Orientation & Safety">Week 1: Farm Orientation & Safety</option>
+              <option value="Week 2: Soil Sampling & Land Preparation">Week 2: Soil Sampling & Land Preparation</option>
+              <option value="Week 3: Crop Propagation & Nursery Practices">Week 3: Crop Propagation & Nursery Practices</option>
+              <option value="Week 4: Livestock Management & Feeding">Week 4: Livestock Management & Feeding</option>
+              <option value="Week 5: Aquaculture & Fishery Operations">Week 5: Aquaculture & Fishery Operations</option>
+              <option value="Week 6: Farm Machinery & Equipment Handling">Week 6: Farm Machinery & Equipment Handling</option>
+            </select>
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl text-sm transition shadow-md flex items-center justify-center gap-2">
+            <i data-lucide="log-in" class="w-4 h-4"></i> Sign In Attendance Now
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section id="section-admin" class="space-y-6 hidden">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-4 gap-3">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">Admin Control & Reports</h2>
+            <p class="text-xs text-slate-500">Monitor course-based registrations, attendance, and absences.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="exportRegisteredCSV()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 shadow">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> Export Registered CSV
+            </button>
+            <button onclick="exportAttendanceCSV()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 shadow">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> Export Attendance CSV
+            </button>
+            <button onclick="clearAllData()" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-medium border border-red-200">
+              Reset Data
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+            <p class="text-xs font-medium text-emerald-700">BPA 213 Registered</p>
+            <p id="statBPA213" class="text-2xl font-bold text-emerald-900 mt-1">0</p>
+          </div>
+          <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl">
+            <p class="text-xs font-medium text-blue-700">BPA 216 Registered</p>
+            <p id="statBPA216" class="text-2xl font-bold text-blue-900 mt-1">0</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl">
+            <p class="text-xs font-medium text-amber-700">BPA 213 Attendance Logs</p>
+            <p id="statAtt213" class="text-2xl font-bold text-amber-900 mt-1">0</p>
+          </div>
+          <div class="bg-violet-50 border border-violet-200 p-4 rounded-xl">
+            <p class="text-xs font-medium text-violet-700">BPA 216 Attendance Logs</p>
+            <p id="statAtt216" class="text-2xl font-bold text-violet-900 mt-1">0</p>
+          </div>
+        </div>
+
+        <div class="flex gap-2 border-b mb-4">
+          <button onclick="switchAdminSubTab('reg')" id="admin-sub-reg" class="pb-2 px-3 text-xs font-semibold border-b-2 border-emerald-700 text-emerald-800">Registered Students</button>
+          <button onclick="switchAdminSubTab('att')" id="admin-sub-att" class="pb-2 px-3 text-xs font-semibold text-slate-500 hover:text-slate-800">Attendance Logs</button>
+          <button onclick="switchAdminSubTab('abs')" id="admin-sub-abs" class="pb-2 px-3 text-xs font-semibold text-slate-500 hover:text-slate-800">Absence List</button>
+        </div>
+
+        <div id="admin-table-reg" class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 uppercase text-slate-600">
+              <tr>
+                <th class="p-2.5">Matric No</th>
+                <th class="p-2.5">Full Name</th>
+                <th class="p-2.5">Course</th>
+                <th class="p-2.5">Programme</th>
+                <th class="p-2.5">Phone</th>
+                <th class="p-2.5">Date</th>
+              </tr>
+            </thead>
+            <tbody id="registeredTableBody" class="divide-y divide-slate-200">
+              <tr><td colspan="6" class="p-4 text-center text-slate-400">No student registrations recorded yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="admin-table-att" class="overflow-x-auto hidden">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 uppercase text-slate-600">
+              <tr>
+                <th class="p-2.5">Matric No</th>
+                <th class="p-2.5">Full Name</th>
+                <th class="p-2.5">Course</th>
+                <th class="p-2.5">Programme</th>
+                <th class="p-2.5">Session</th>
+                <th class="p-2.5">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceTableBody" class="divide-y divide-slate-200">
+              <tr><td colspan="6" class="p-4 text-center text-slate-400">No attendance clock-ins recorded yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="admin-table-abs" class="overflow-x-auto hidden">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 uppercase text-slate-600">
+              <tr>
+                <th class="p-2.5">Course</th>
+                <th class="p-2.5">Matric No</th>
+                <th class="p-2.5">Student</th>
+                <th class="p-2.5">Status</th>
+              </tr>
+            </thead>
+            <tbody id="absenceTableBody" class="divide-y divide-slate-200">
+              <tr><td colspan="4" class="p-4 text-center text-slate-400">No absences flagged yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-white border-t py-4 text-center text-xs text-slate-500">
+    BOUESTI Teaching & Research Farm • Practical Attendance & Tracking System
+  </footer>
+
+  <script>
+    function generateDeviceId() {
+      const raw = `${navigator.userAgent}|${navigator.language}|${screen.width}x${screen.height}|${new Date().getTimezoneOffset()}`;
+      let hash = 0;
+      for (let i = 0; i < raw.length; i++) {
+        hash = ((hash << 5) - hash + raw.charCodeAt(i)) | 0;
+      }
+      return `device_${Math.abs(hash)}`;
+    }
+
+    function getCurrentDeviceId() {
+      let deviceId = localStorage.getItem('bouesti_device_id');
+      if (!deviceId) {
+        deviceId = generateDeviceId();
+        localStorage.setItem('bouesti_device_id', deviceId);
+      }
+      return deviceId;
+    }
+
+    function switchTab(tabId) {
+      ['register', 'signin', 'admin'].forEach((t) => {
+        document.getElementById(`section-${t}`).classList.add('hidden');
+        document.getElementById(`tab-${t}`).className = 'px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition text-emerald-200 hover:text-white';
+      });
+      document.getElementById(`section-${tabId}`).classList.remove('hidden');
+      document.getElementById(`tab-${tabId}`).className = 'px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition bg-white text-emerald-900 shadow';
+      if (tabId === 'admin') loadAdminDashboard();
+    }
+
+    function switchAdminSubTab(sub) {
+      const views = ['reg', 'att', 'abs'];
+      views.forEach((v) => document.getElementById(`admin-table-${v}`).classList.add('hidden'));
+      const tabs = ['reg', 'att', 'abs'];
+      tabs.forEach((v) => document.getElementById(`admin-sub-${v}`).className = 'pb-2 px-3 text-xs font-semibold text-slate-500 hover:text-slate-800');
+      document.getElementById(`admin-table-${sub}`).classList.remove('hidden');
+      document.getElementById(`admin-sub-${sub}`).className = 'pb-2 px-3 text-xs font-semibold border-b-2 border-emerald-700 text-emerald-800';
+    }
+
+    async function filterRoster(query) {
+      const dropdown = document.getElementById('rosterDropdown');
+      if (!query || query.length < 2) {
+        dropdown.classList.add('hidden');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/roster?q=${encodeURIComponent(query)}`);
+        const matches = await response.json();
+        if (!matches.length) {
+          dropdown.classList.add('hidden');
+          return;
+        }
+
+        dropdown.innerHTML = matches.map((student) => `
+          <div onclick="selectStudent('${student.matric}', '${student.name}', '${student.programme}')" class="p-2.5 hover:bg-emerald-50 cursor-pointer border-b text-xs flex justify-between">
+            <span class="font-semibold text-emerald-900">${student.matric}</span>
+            <span class="text-slate-700">${student.name}</span>
+          </div>
+        `).join('');
+        dropdown.classList.remove('hidden');
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function selectStudent(matric, name, programme) {
+      document.getElementById('regMatric').value = matric;
+      document.getElementById('regName').value = name;
+      document.getElementById('regProgramme').value = programme;
+      document.getElementById('regSearchInput').value = `${matric} - ${name}`;
+      document.getElementById('rosterDropdown').classList.add('hidden');
+    }
+
+    let compressedPhotoBase64 = '';
+    function previewImage(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const img = new Image();
+          img.onload = function () {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 200;
+            canvas.height = 200;
+            ctx.drawImage(img, 0, 0, 200, 200);
+            compressedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.6);
+            document.getElementById('photoPreview').src = compressedPhotoBase64;
+            document.getElementById('photoPreviewContainer').classList.remove('hidden');
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    async function handleRegistration(event) {
+      event.preventDefault();
+      const matric = document.getElementById('regMatric').value;
+      const name = document.getElementById('regName').value;
+      const programme = document.getElementById('regProgramme').value;
+      const phone = document.getElementById('regPhone').value;
+      const course = document.getElementById('regCourse').value;
+
+      if (!matric || !course) {
+        alert('Please select a student and course unit.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            matric,
+            name,
+            programme,
+            phone,
+            course,
+            photo: compressedPhotoBase64,
+            deviceId: getCurrentDeviceId()
+          })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || 'Registration failed.');
+        }
+
+        alert('Registration successful!');
+        document.getElementById('registrationForm').reset();
+        document.getElementById('photoPreviewContainer').classList.add('hidden');
+        compressedPhotoBase64 = '';
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    function getCurrentLocation() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error('Geolocation is not supported by this browser.'));
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => resolve(position.coords),
+          () => reject(new Error('Location access was denied. Please allow location access to sign in.')),
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+      });
+    }
+
+    async function handleAttendance(event) {
+      event.preventDefault();
+      const course = document.getElementById('signInCourse').value;
+      const matric = document.getElementById('signInMatric').value.trim().toUpperCase();
+      const session = document.getElementById('signInSession').value;
+
+      if (!course || !matric || !session) {
+        alert('Please select course, matric number, and session.');
+        return;
+      }
+
+      try {
+        const coords = await getCurrentLocation();
+        const response = await fetch('/api/attendance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            matric,
+            course,
+            session,
+            deviceId: getCurrentDeviceId(),
+            latitude: coords.latitude,
+            longitude: coords.longitude
+          })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || 'Attendance sign-in failed.');
+        }
+
+        alert(`Attendance signed in successfully for ${result.attendance.name} (${result.attendance.matric}) in ${result.attendance.course}.`);
+        document.getElementById('signinForm').reset();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function loadAdminDashboard() {
+      try {
+        const response = await fetch('/api/admin');
+        const data = await response.json();
+
+        document.getElementById('statBPA213').innerText = data.counts.BPA213Registered;
+        document.getElementById('statBPA216').innerText = data.counts.BPA216Registered;
+        document.getElementById('statAtt213').innerText = data.counts.BPA213Attendance;
+        document.getElementById('statAtt216').innerText = data.counts.BPA216Attendance;
+
+        const regBody = document.getElementById('registeredTableBody');
+        if (!data.registrations.length) {
+          regBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">No student registrations recorded yet.</td></tr>';
+        } else {
+          regBody.innerHTML = data.registrations.map(r => `
+            <tr class="hover:bg-slate-50">
+              <td class="p-2.5 font-semibold text-emerald-900">${r.matric}</td>
+              <td class="p-2.5">${r.name}</td>
+              <td class="p-2.5">${r.course}</td>
+              <td class="p-2.5">${r.programme}</td>
+              <td class="p-2.5">${r.phone}</td>
+              <td class="p-2.5 text-slate-500">${new Date(r.createdAt).toLocaleString()}</td>
+            </tr>
+          `).join('');
+        }
+
+        const attBody = document.getElementById('attendanceTableBody');
+        if (!data.attendance.length) {
+          attBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">No attendance clock-ins recorded yet.</td></tr>';
+        } else {
+          attBody.innerHTML = data.attendance.map(a => `
+            <tr class="hover:bg-slate-50">
+              <td class="p-2.5 font-semibold text-emerald-900">${a.matric}</td>
+              <td class="p-2.5">${a.name}</td>
+              <td class="p-2.5">${a.course}</td>
+              <td class="p-2.5">${a.programme}</td>
+              <td class="p-2.5 font-medium text-blue-800">${a.session}</td>
+              <td class="p-2.5 text-slate-500">${new Date(a.timestamp).toLocaleString()}</td>
+            </tr>
+          `).join('');
+        }
+
+        const absBody = document.getElementById('absenceTableBody');
+        if (!data.absences.length) {
+          absBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">No absences flagged yet.</td></tr>';
+        } else {
+          absBody.innerHTML = data.absences.map(a => `
+            <tr class="hover:bg-slate-50">
+              <td class="p-2.5 font-semibold text-slate-800">${a.course}</td>
+              <td class="p-2.5 font-semibold text-emerald-900">${a.matric}</td>
+              <td class="p-2.5">${a.name}</td>
+              <td class="p-2.5 text-red-700 font-medium">${a.status}</td>
+            </tr>
+          `).join('');
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    async function exportRegisteredCSV() {
+      try {
+        const response = await fetch('/api/admin');
+        const data = await response.json();
+        if (!data.registrations.length) {
+          alert('No registration records to export.');
+          return;
+        }
+
+        let csv = 'Matric Number,Full Name,Course,Programme,Phone,Date\n';
+        data.registrations.forEach(r => {
+          csv += `"${r.matric}","${r.name}","${r.course}","${r.programme}","${r.phone}","${new Date(r.createdAt).toLocaleString()}"\n`;
+        });
+        downloadCSV(csv, 'BOUESTI_Registered_Students.csv');
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    async function exportAttendanceCSV() {
+      try {
+        const response = await fetch('/api/admin');
+        const data = await response.json();
+        if (!data.attendance.length) {
+          alert('No attendance records to export.');
+          return;
+        }
+
+        let csv = 'Matric Number,Full Name,Course,Programme,Session,Timestamp\n';
+        data.attendance.forEach(a => {
+          csv += `"${a.matric}","${a.name}","${a.course}","${a.programme}","${a.session}","${new Date(a.timestamp).toLocaleString()}"\n`;
+        });
+        downloadCSV(csv, 'BOUESTI_Attendance_Logs.csv');
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function downloadCSV(csvContent, filename) {
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    async function clearAllData() {
+      if (!confirm('Are you sure you want to reset all stored records?')) return;
+      try {
+        const response = await fetch('/api/reset', { method: 'POST' });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'Reset failed.');
+        await loadAdminDashboard();
+        alert(result.message);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    if (/FBAN|FBAV|Instagram|WhatsApp|Telegram/.test(navigator.userAgent)) {
+      document.getElementById('browser-warning').classList.remove('hidden');
+    }
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>

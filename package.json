@@ -1,0 +1,13 @@
+{
+  "name": "bouesti-practical-attendance",
+  "version": "1.0.0",
+  "description": "BOUESTI practical attendance and geofence enforcement system for BPA 213 and BPA 216",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
