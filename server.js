@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -9,10 +11,23 @@ const STORE_PATH = path.join(DATA_DIR, 'store.json');
 
 const COURSE_CODES = ['BPA 213', 'BPA 216'];
 const FARM = {
-  latitude: 7.3025,
-  longitude: 5.1520,
-  radiusMeters: 250
+  latitude: parseCoordinate(process.env.FARM_LATITUDE, -90, 90),
+  longitude: parseCoordinate(process.env.FARM_LONGITUDE, -180, 180),
+  radiusMeters: parseRadius(process.env.FARM_RADIUS_METERS)
 };
+const farmLocationConfigured = FARM.latitude !== null && FARM.longitude !== null;
+
+function parseCoordinate(value, min, max) {
+  if (value === undefined || value.trim() === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= min && number <= max ? number : null;
+}
+
+function parseRadius(value) {
+  if (value === undefined || value.trim() === '') return 250;
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : 250;
+}
 
 const MASTER_ROSTER = [
   { matric: '13044', name: 'Afe Oluwatamilore John', programme: 'COMPUTER SCIENCE' },
@@ -33,9 +48,7 @@ const MASTER_ROSTER = [
 ];
 
 function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(STORE_PATH)) {
     fs.writeFileSync(STORE_PATH, JSON.stringify({ registrations: [], attendance: [] }, null, 2));
   }
@@ -70,36 +83,32 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function computeAbsenceList(registrations, attendance) {
-  const present = new Set(attendance.map((entry) => `${entry.matric}|${entry.course}`));
-  return registrations
-    .filter((reg) => !present.has(`${reg.matric}|${reg.course}`))
-    .map((reg) => ({
-      course: reg.course,
-      matric: reg.matric,
-      name: reg.name,
-      status: 'Absent (No valid sign-in)'
-    }));
+  const present = new Set(attendance.map((entry) => `${entry.matric}|${entry.course}|${entry.session}`));
+  return registrations.flatMap((reg) => {
+    const attendedSessions = new Set(attendance
+      .filter((entry) => entry.matric === reg.matric && entry.course === reg.course)
+      .map((entry) => entry.session));
+    return [...new Set(attendance.filter((entry) => entry.course === reg.course).map((entry) => entry.session))]
+      .filter((session) => !attendedSessions.has(session))
+      .map((session) => ({ course: reg.course, matric: reg.matric, name: reg.name, session, status: 'Absent (No valid sign-in)' }));
+  });
 }
 
 function buildAdminSummary() {
   const store = readStore();
   const registrations = store.registrations || [];
   const attendance = store.attendance || [];
-
-  const counts = {
-    BPA213Registered: registrations.filter((r) => r.course === 'BPA 213').length,
-    BPA216Registered: registrations.filter((r) => r.course === 'BPA 216').length,
-    BPA213Attendance: attendance.filter((a) => a.course === 'BPA 213').length,
-    BPA216Attendance: attendance.filter((a) => a.course === 'BPA 216').length
-  };
-
   return {
-    counts,
+    counts: {
+      BPA213Registered: registrations.filter((r) => r.course === 'BPA 213').length,
+      BPA216Registered: registrations.filter((r) => r.course === 'BPA 216').length,
+      BPA213Attendance: attendance.filter((a) => a.course === 'BPA 213').length,
+      BPA216Attendance: attendance.filter((a) => a.course === 'BPA 216').length
+    },
     registrations,
     attendance,
     absences: computeAbsenceList(registrations, attendance)
@@ -109,24 +118,27 @@ function buildAdminSummary() {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
+app.get('/api/config', (_req, res) => {
+  res.json({
+    farmLocationConfigured,
+    radiusMeters: FARM.radiusMeters,
+    message: farmLocationConfigured
+      ? `Farm geofence is configured with a ${FARM.radiusMeters}m radius.`
+      : 'Farm location is not configured. Set FARM_LATITUDE and FARM_LONGITUDE on the server before accepting attendance.'
+  });
+});
+
 app.get('/api/roster', (req, res) => {
   const query = sanitizeText(req.query.q || '').toLowerCase();
-  let results = MASTER_ROSTER;
-
-  if (query) {
-    results = MASTER_ROSTER.filter((student) => {
-      return student.matric.toLowerCase().includes(query) || student.name.toLowerCase().includes(query);
-    });
-  }
-
+  const results = query
+    ? MASTER_ROSTER.filter((student) => student.matric.toLowerCase().includes(query) || student.name.toLowerCase().includes(query))
+    : MASTER_ROSTER;
   res.json(results.slice(0, 20));
 });
 
-app.get('/api/admin', (req, res) => {
-  res.json(buildAdminSummary());
-});
+app.get('/api/admin', (_req, res) => res.json(buildAdminSummary()));
 
-app.post('/api/reset', (req, res) => {
+app.post('/api/reset', (_req, res) => {
   writeStore({ registrations: [], attendance: [] });
   res.json({ success: true, message: 'All records cleared.' });
 });
@@ -144,35 +156,29 @@ app.post('/api/register', (req, res) => {
   if (!matric || !name || !programme || !phone || !course) {
     return res.status(400).json({ success: false, message: 'Missing fields. Please complete the form.' });
   }
-
   if (!COURSE_CODES.includes(course)) {
     return res.status(400).json({ success: false, message: 'Invalid course selected.' });
   }
 
   const store = readStore();
-  const alreadyExists = store.registrations.some((reg) => reg.matric === matric && reg.course === course);
-  if (alreadyExists) {
+  if (store.registrations.some((reg) => reg.matric === matric && reg.course === course)) {
     return res.status(409).json({ success: false, message: 'This student is already registered for the selected course.' });
   }
 
-  const registration = {
-    matric,
-    name,
-    programme,
-    phone,
-    course,
-    photo,
-    deviceId,
-    createdAt: new Date().toISOString()
-  };
-
+  const registration = { matric, name, programme, phone, course, photo, deviceId, createdAt: new Date().toISOString() };
   store.registrations.push(registration);
   writeStore(store);
-
   res.status(201).json({ success: true, registration });
 });
 
 app.post('/api/attendance', (req, res) => {
+  if (!farmLocationConfigured) {
+    return res.status(503).json({
+      success: false,
+      message: 'Attendance is unavailable until the farm coordinates are configured on the server.'
+    });
+  }
+
   const body = req.body || {};
   const matric = normalizeMatric(body.matric);
   const course = sanitizeText(body.course);
@@ -181,35 +187,26 @@ app.post('/api/attendance', (req, res) => {
   const latitude = Number(body.latitude);
   const longitude = Number(body.longitude);
 
-  if (!COURSE_CODES.includes(course)) {
-    return res.status(400).json({ success: false, message: 'Invalid course selected.' });
-  }
-
-  if (!session) {
-    return res.status(400).json({ success: false, message: 'Please select a session.' });
-  }
-
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-    return res.status(400).json({ success: false, message: 'Location data is required to sign in.' });
+  if (!COURSE_CODES.includes(course)) return res.status(400).json({ success: false, message: 'Invalid course selected.' });
+  if (!session) return res.status(400).json({ success: false, message: 'Please select a session.' });
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+    return res.status(400).json({ success: false, message: 'Valid location coordinates are required to sign in.' });
   }
 
   const store = readStore();
   const registration = store.registrations.find((reg) => reg.matric === matric && reg.course === course);
-
-  if (!registration) {
-    return res.status(404).json({ success: false, message: 'Student is not registered for this course.' });
-  }
-
+  if (!registration) return res.status(404).json({ success: false, message: 'Student is not registered for this course.' });
   if (registration.deviceId !== deviceId) {
     return res.status(403).json({ success: false, message: 'This student is registered on a different device. Use the approved device only.' });
   }
 
   const distanceMeters = haversineMeters(FARM.latitude, FARM.longitude, latitude, longitude);
   if (distanceMeters > FARM.radiusMeters) {
-    return res.status(403).json({
-      success: false,
-      message: `You are ${Math.round(distanceMeters)}m away from the BOUESTI farm. Attendance is only allowed within ${FARM.radiusMeters}m.`
-    });
+    return res.status(403).json({ success: false, message: `You are ${Math.round(distanceMeters)}m away from the farm. Attendance is only allowed within ${FARM.radiusMeters}m.` });
+  }
+
+  if (store.attendance.some((entry) => entry.matric === matric && entry.course === course && entry.session === session)) {
+    return res.status(409).json({ success: false, message: 'Attendance has already been recorded for this session.' });
   }
 
   const attendanceEntry = {
@@ -220,16 +217,15 @@ app.post('/api/attendance', (req, res) => {
     session,
     deviceId,
     timestamp: new Date().toISOString(),
-    geofenceStatus: 'Within BOUESTI farm radius',
+    geofenceStatus: 'Within configured farm radius',
     distanceMeters: Math.round(distanceMeters)
   };
-
   store.attendance.push(attendanceEntry);
   writeStore(store);
-
   res.json({ success: true, attendance: attendanceEntry });
 });
 
 app.listen(PORT, () => {
-  console.log(`BOUESTI attendance server running on http://localhost:${PORT}`);
+  console.log(`BOUESTI attendance server running on port ${PORT}`);
+  if (!farmLocationConfigured) console.warn('Farm location is unset; attendance sign-in is disabled. See .env.example.');
 });
